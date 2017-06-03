@@ -2,12 +2,67 @@ import xml.etree.ElementTree as ET
 import re
 import collections
 import pprint
-import schema
+
 import csv
 import codecs
 import cerberus
 filename=r'F:\boston_massachusetts.osm\boston_samplefile'
-SCHEMA=schema.Schema
+SCHEMA = {
+    'node': {
+        'type': 'dict',
+        'schema': {
+            'id': {'required': True, 'type': 'integer', 'coerce': int},
+            'lat': {'required': True, 'type': 'float', 'coerce': float},
+            'lon': {'required': True, 'type': 'float', 'coerce': float},
+            'user': {'required': True, 'type': 'string'},
+            'uid': {'required': True, 'type': 'integer', 'coerce': int},
+            'version': {'required': True, 'type': 'string'},
+            'changeset': {'required': True, 'type': 'integer', 'coerce': int},
+            'timestamp': {'required': True, 'type': 'string'}
+        }
+    },
+    'node_tags': {
+        'type': 'list',
+        'schema': {
+            'type': 'dict',
+            'schema': {
+                'k': {'required': True, 'type': 'string'},
+                'v': {'required': True, 'type': 'string'},
+            }
+        }
+    },
+    'way': {
+        'type': 'dict',
+        'schema': {
+            'id': {'required': True, 'type': 'integer', 'coerce': int},
+            'user': {'required': True, 'type': 'string'},
+            'uid': {'required': True, 'type': 'integer', 'coerce': int},
+            'version': {'required': True, 'type': 'string'},
+            'changeset': {'required': True, 'type': 'integer', 'coerce': int},
+            'timestamp': {'required': True, 'type': 'string'}
+        }
+    },
+    'way_nodes': {
+        'type': 'list',
+        'schema': {
+            'type': 'dict',
+            'schema': {
+                'ref': {'required': True, 'type': 'integer', 'coerce': int}
+            }
+        }
+    },
+    'way_tags': {
+        'type': 'list',
+        'schema': {
+            'type': 'dict',
+            'schema': {
+                'k': {'required': True, 'type': 'string'},
+                'v': {'required': True, 'type': 'string'},
+            }
+        }
+    }
+}
+
 tags_dict={}
 mapping={'St':'Street','St.':'Street','Rd':'Road','Rd.':'Road','Ave':'Avenue','H':'Highway','Pkwy':'Parkway'}
 
@@ -100,11 +155,13 @@ def get_element(filename,tags=('node','way','relation')):
         if event=='end' and elem.tag in tags:
             yield elem
             root.clear()
-
+def validate_element_generator(errors):
+    for errors_tuple in errors.items():
+        yield errors_tuple
 def validate_element(element, validator, schema=SCHEMA):
     """Raise ValidationError if element does not match schema"""
     if validator.validate(element, schema) is not True:
-        field, errors = next(validator.errors.iteritems())
+        field,errors=next(validate_element_generator(validator.errors))
         message_string = "\nElement of type '{0}' has the following errors:\n{1}"
         error_string = pprint.pformat(errors)
 
@@ -154,3 +211,4 @@ def process(file_in,validate):
 
 
 process(filename,validate=True)
+
