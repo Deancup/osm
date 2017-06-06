@@ -6,7 +6,7 @@ import pprint
 import csv
 import codecs
 import cerberus
-filename=r'F:\boston_massachusetts.osm\boston_samplefile'
+filename=r'F:\new_osm\boston_osm'
 SCHEMA = {
     'node': {
         'type': 'dict',
@@ -26,8 +26,10 @@ SCHEMA = {
         'schema': {
             'type': 'dict',
             'schema': {
-                'k': {'required': True, 'type': 'string'},
-                'v': {'required': True, 'type': 'string'},
+                'id': {'required': True, 'type': 'integer', 'coerce': int},
+                'key': {'required': True, 'type': 'string'},
+                'value': {'required': True, 'type': 'string'},
+                'type': {'required': True, 'type': 'string'}
             }
         }
     },
@@ -47,7 +49,9 @@ SCHEMA = {
         'schema': {
             'type': 'dict',
             'schema': {
-                'ref': {'required': True, 'type': 'integer', 'coerce': int}
+                'id': {'required': True, 'type': 'integer', 'coerce': int},
+                'node_id': {'required': True, 'type': 'integer', 'coerce': int},
+                'position': {'required': True, 'type': 'integer', 'coerce': int}
             }
         }
     },
@@ -56,8 +60,10 @@ SCHEMA = {
         'schema': {
             'type': 'dict',
             'schema': {
-                'k': {'required': True, 'type': 'string'},
-                'v': {'required': True, 'type': 'string'},
+                'id': {'required': True, 'type': 'integer', 'coerce': int},
+                'key': {'required': True, 'type': 'string'},
+                'value': {'required': True, 'type': 'string'},
+                'type': {'required': True, 'type': 'string'}
             }
         }
     }
@@ -86,10 +92,9 @@ def get_child_fields(filename,tag,child_tag):
                 if tag.attrib is not None:
                     field_list=list(tag.attrib.keys())
     return field_list
-
-NODE_TAGS_FIELDS=get_child_fields(filename,'node','tag')
-WAY_TAGS_FIELDS=get_child_fields(filename,'way','tag')
-WAY_NODES_FIELDS=get_child_fields(filename,'way','nd')
+NODE_TAGS_FIELDS = ['id', 'key', 'value', 'type']
+WAY_TAGS_FIELDS = ['id', 'key', 'value', 'type']
+WAY_NODES_FIELDS = ['id', 'node_id', 'position']
 #获取field list区间
 #修改街道名
 def audit_street_types(street_types, street_name):
@@ -180,11 +185,11 @@ class UnicodeDictWriter(csv.DictWriter, object):
             self.writerow(row)
 #主函数
 def process(file_in,validate):
-    with codecs.open(r'F:\boston_massachusetts.osm\node_path.csv', 'w') as nodes_file, \
-         codecs.open(r'F:\boston_massachusetts.osm\node_tag_path.csv', 'w') as nodes_tags_file, \
-         codecs.open(r'F:\boston_massachusetts.osm\way_path.csv', 'w') as ways_file, \
-         codecs.open(r'F:\boston_massachusetts.osm\way_node_path.csv', 'w') as way_nodes_file, \
-         codecs.open(r'F:\boston_massachusetts.osm\way_tag_path.csv', 'w') as way_tags_file:
+    with codecs.open(r'F:\new_osm\node_path.csv', 'w') as nodes_file, \
+         codecs.open(r'F:\new_osm\node_tag_path.csv', 'w') as nodes_tags_file, \
+         codecs.open(r'F:\new_osm\way_path.csv', 'w') as ways_file, \
+         codecs.open(r'F:\new_osm\way_node_path.csv', 'w') as way_nodes_file, \
+         codecs.open(r'F:\new_osm\way_tag_path.csv', 'w') as way_tags_file:
         nodes_writer = UnicodeDictWriter(nodes_file, NODE_FIELDS)
         node_tags_writer = UnicodeDictWriter(nodes_tags_file, NODE_TAGS_FIELDS)
         ways_writer = UnicodeDictWriter(ways_file, WAY_FIELDS)
